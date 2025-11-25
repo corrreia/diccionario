@@ -14,17 +14,12 @@ export class FileWordList implements WordList {
   }
 
   async addWord(word: string): Promise<void> {
-    // mimic Go AddWord: append the raw word bytes (no newline handling here)
     await fs.appendFile(this.filename, word, { encoding: 'utf8' });
   }
 
   async getWords(): Promise<string[]> {
-    // mimic Go GetWords conceptually: read all lines and trim whitespace
     const abs = path.resolve(this.filename);
     const data = await fs.readFile(abs, { encoding: 'utf8' });
-    const lines: string[] = data.split('\n');
-    return lines
-      .map((s: string) => s.trim())
-      .filter((s: string) => s.length > 0);
+    return data.split('\n').slice(0, 100000);
   }
 }

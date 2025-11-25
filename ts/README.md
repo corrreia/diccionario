@@ -2,7 +2,7 @@
 
 A simple English word list control plane server.
 
-## Golang Instructions
+## Typescript Instructions
 
 From the root of this repo run:
 
