@@ -25,7 +25,7 @@ Requirements:
 * It performs case insensitive matching to the words in the wordlist
 * It only returns true if the word exists (exactly matches)in the wordlist
 
-## /add (add a word)
+## /add
 
 This endpoint adds a new word to the word list.
 This endpoint needs to be implemented still.
