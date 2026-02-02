@@ -2,7 +2,6 @@ package diccionario
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,19 +17,22 @@ type ExistsResponse struct {
 func (s *Server) WordExists(c *gin.Context) {
 	word := c.Param("word")
 
-	wordlist, err := s.w.GetWords()
+	valid, err := ValidateWord(word)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	resp := ExistsResponse{Exists: false}
-
-	for _, w := range wordlist {
-		if strings.HasPrefix(w, word) {
-			resp.Exists = true
-		}
+	if !valid {
+		c.String(http.StatusBadRequest, "invalid word")
+		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	exists, err := s.w.WordExists(word)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, ExistsResponse{Exists: exists})
 }

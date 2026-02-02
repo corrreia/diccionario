@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/for-the-kidz/diccionario/wordlist"
@@ -25,6 +26,19 @@ func (f *fakeWordList) GetWords() ([]string, error) {
 		return nil, f.err
 	}
 	return f.words, nil
+}
+
+func (f *fakeWordList) WordExists(word string) (bool, error) {
+	if f.err != nil {
+		return false, f.err
+	}
+	wordLower := strings.ToLower(word)
+	for _, w := range f.words {
+		if strings.ToLower(w) == wordLower {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func newTestServer(w wordlist.WordList) *Server {
@@ -58,8 +72,15 @@ func TestWordExists(t *testing.T) {
 			wantExists: true,
 		},
 		{
-			name:       "word exists as prefix",
+			name:       "prefix does not match (exact match required)",
 			wordParam:  "ad",
+			words:      []string{"hola", "adios"},
+			wantStatus: http.StatusOK,
+			wantExists: false,
+		},
+		{
+			name:       "word exists case insensitive",
+			wordParam:  "HOLA",
 			words:      []string{"hola", "adios"},
 			wantStatus: http.StatusOK,
 			wantExists: true,
@@ -82,8 +103,22 @@ func TestWordExists(t *testing.T) {
 			name:       "GetWords returns error",
 			wordParam:  "hola",
 			getErr:     errors.New("boom"),
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusInternalServerError,
 			wantBody:   "boom",
+		},
+		{
+			name:       "invalid word",
+			words:      []string{},
+			wordParam:  "123",
+			wantStatus: http.StatusBadRequest,
+			wantBody:   "word contains non-alpha characters",
+		},
+		{
+			name:       "non alpha characters",
+			words:      []string{},
+			wordParam:  "abc!",
+			wantStatus: http.StatusBadRequest,
+			wantBody:   "word contains non-alpha characters",
 		},
 	}
 
